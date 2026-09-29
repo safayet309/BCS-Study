@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCS Tracker Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .preview {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+            border-radius: 24px;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin: 10px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>BCS Tracker App Icons</h2>
+        <!-- Icon Preview -->
+        <div id="preview-container"></div>
+        <p style="color: #64748b; margin-bottom: 20px;">Click the buttons below to download your PNG files.</p>
+        
+        <button onclick="downloadIcon(192)">Download icon-192.png</button>
+        <button onclick="downloadIcon(512)">Download icon-512.png</button>
+    </div>
+
+    <script>
+        // High-quality SVG design for BCS Study Tracker
+        const svgCode = `
+        <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="512" height="512" rx="112" fill="#3B82F6"/>
+            <!-- Left Page -->
+            <path d="M140 180C140 157.909 157.909 140 180 140H256V372C256 372 200 372 180 372C157.909 372 140 354.091 140 332V180Z" fill="white"/>
+            <!-- Right Page -->
+            <path d="M372 180C372 157.909 354.091 140 332 140H256V372C256 372 312 372 332 372C354.091 372 372 354.091 372 332V180Z" fill="white"/>
+            <!-- Center Timer -->
+            <circle cx="256" cy="256" r="64" fill="#3B82F6"/>
+            <circle cx="256" cy="256" r="50" fill="none" stroke="white" stroke-width="12"/>
+            <path d="M256 220V256L276 276" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        `;
+
+        // Show preview on screen
+        document.getElementById('preview-container').innerHTML = svgCode.replace('width="512" height="512"', 'class="preview" viewBox="0 0 512 512"');
+
+        // Function to generate and download PNG
+        function downloadIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            const img = new Image();
+            const svgBlob = new Blob([svgCode], {type: 'image/svg+xml;charset=utf-8'});
+            const url = URL.createObjectURL(svgBlob);
+            
+            img.onload = () => {
+                ctx.drawImage(img, 0, 0, size, size);
+                const a = document.createElement('a');
+                a.download = \`icon-\${size}.png\`;
+                a.href = canvas.toDataURL('image/png');
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+            img.src = url;
+        }
+    </script>
+</body>
+</html>
