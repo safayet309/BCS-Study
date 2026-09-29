@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BCS Study Tracker</title>
+    <meta name="description" content="Plan • Study • Track • Improve">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Setup Screen -->
+    <div id="setup-screen" class="screen hidden setup-container">
+        <div class="setup-card">
+            <div class="setup-icon"><i data-lucide="book-open"></i></div>
+            <h2>Welcome to BCS Study Tracker</h2>
+            <p>Let's personalize your study experience.</p>
+            
+            <div class="form-group">
+                <label>Your Name</label>
+                <input type="text" id="setup-name" placeholder="E.g. Hasan">
+            </div>
+            
+            <div class="form-group">
+                <label>Main Goal</label>
+                <select id="setup-goal">
+                    <option value="BCS Preliminary">BCS Preliminary</option>
+                    <option value="BCS Written">BCS Written</option>
+                    <option value="Both">Both</option>
+                    <option value="General Study">General Study</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Daily Study Target (Hours)</label>
+                <input type="number" id="setup-target" value="6" min="1" max="16">
+            </div>
+
+            <button id="btn-finish-setup" class="btn-primary w-full">Start Journey</button>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app-container" class="app-layout hidden">
+        
+        <!-- Desktop Sidebar -->
+        <aside class="sidebar desktop-only">
+            <div class="brand">
+                <i data-lucide="book-open" class="text-primary"></i>
+                <span>BCS Tracker</span>
+            </div>
+            <nav class="side-nav">
+                <button class="nav-item active" data-target="home"><i data-lucide="layout-dashboard"></i> Home</button>
+                <button class="nav-item" data-target="study"><i data-lucide="timer"></i> Study</button>
+                <button class="nav-item" data-target="analytics"><i data-lucide="bar-chart-2"></i> Analytics</button>
+                <button class="nav-item" data-target="subjects"><i data-lucide="library"></i> Subjects</button>
+                <button class="nav-item" data-target="history"><i data-lucide="history"></i> History</button>
+                <button class="nav-item" data-target="settings"><i data-lucide="settings"></i> Settings</button>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- HOME SCREEN -->
+            <section id="home" class="view active">
+                <header class="top-header">
+                    <div>
+                        <h1 id="greeting">Good Morning 👋</h1>
+                        <p id="current-date" class="text-muted">Loading date...</p>
+                    </div>
+                </header>
+                
+                <div class="dashboard-grid">
+                    <!-- Progress Card -->
+                    <div class="card progress-card">
+                        <h3>Today's Progress</h3>
+                        <div class="progress-circle-container">
+                            <svg viewBox="0 0 36 36" class="circular-chart primary">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" id="today-progress-circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <text x="18" y="20.35" class="percentage" id="today-percentage">0%</text>
+                            </svg>
+                        </div>
+                        <div class="progress-stats">
+                            <div class="stat"><span class="label">Studied</span><strong id="today-studied">0h 0m</strong></div>
+                            <div class="stat"><span class="label">Target</span><strong id="today-target">6h</strong></div>
+                            <div class="stat"><span class="label">Remaining</span><strong id="today-remaining">6h</strong></div>
+                        </div>
+                        <button class="btn-primary w-full mt-4" onclick="app.navigate('study')"><i data-lucide="play"></i> Start Studying</button>
+                    </div>
+
+                    <!-- Streak Card -->
+                    <div class="card streak-card">
+                        <div class="streak-header">
+                            <i data-lucide="flame" class="text-orange"></i>
+                            <h3>Study Streak</h3>
+                        </div>
+                        <div class="streak-body">
+                            <h2 id="current-streak">0 Days</h2>
+                            <p class="text-muted">Longest: <span id="longest-streak">0</span> days</p>
+                        </div>
+                    </div>
+
+                    <!-- Today's Plan -->
+                    <div class="card plan-card">
+                        <div class="flex-between">
+                            <h3>Today's Plan</h3>
+                            <button class="btn-icon" onclick="document.getElementById('modal-add-plan').classList.remove('hidden')"><i data-lucide="plus"></i></button>
+                        </div>
+                        <div id="plan-list" class="plan-list mt-2">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STUDY SCREEN -->
+            <section id="study" class="view">
+                <header class="top-header">
+                    <h2>Study Session</h2>
+                </header>
+
+                <div class="study-container card">
+                    <div id="study-setup">
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <select id="timer-subject"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Study Type</label>
+                            <select id="timer-type">
+                                <option>Reading</option>
+                                <option>MCQ Practice</option>
+                                <option>Written Practice</option>
+                                <option>Revision</option>
+                                <option>Lecture</option>
+                                <option>Note Making</option>
+                                <option>Model Test</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Mode</label>
+                            <select id="timer-mode">
+                                <option value="normal">Normal Stopwatch</option>
+                                <option value="pomodoro-25">Pomodoro (25/5)</option>
+                                <option value="pomodoro-50">Pomodoro (50/10)</option>
+                            </select>
+                        </div>
+                        <button id="btn-start-timer" class="btn-primary w-full mt-2">Start Timer</button>
+                    </div>
+
+                    <div id="study-active" class="hidden timer-display">
+                        <h3 id="active-subject-title">Subject Name</h3>
+                        <p id="active-type-title" class="text-muted">Reading</p>
+                        <div class="time-huge" id="timer-display">00:00:00</div>
+                        <p id="pomodoro-status" class="hidden text-orange font-medium mb-4">Work Phase</p>
+                        
+                        <div class="timer-controls">
+                            <button id="btn-pause-timer" class="btn-secondary"><i data-lucide="pause"></i> Pause</button>
+                            <button id="btn-resume-timer" class="btn-primary hidden"><i data-lucide="play"></i> Resume</button>
+                            <button id="btn-finish-timer" class="btn-danger"><i data-lucide="square"></i> Finish</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ANALYTICS SCREEN -->
+            <section id="analytics" class="view">
+                <header class="top-header">
+                    <h2>Analytics</h2>
+                </header>
+                <div class="analytics-grid">
+                    <div class="card stat-box">
+                        <span class="label">Total Study Time</span>
+                        <h3 id="stat-total-time">0h 0m</h3>
+                    </div>
+                    <div class="card stat-box">
+                        <span class="label">Total Sessions</span>
+                        <h3 id="stat-total-sessions">0</h3>
+                    </div>
+                    <div class="card stat-box">
+                        <span class="label">Avg Session</span>
+                        <h3 id="stat-avg-session">0m</h3>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <h3>Last 7 Days</h3>
+                    <div class="chart-container"><canvas id="chart-weekly"></canvas></div>
+                </div>
+
+                <div class="dashboard-grid mt-4">
+                    <div class="card">
+                        <h3>Subject Distribution</h3>
+                        <div class="chart-container-small"><canvas id="chart-subjects"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <h3>Study Type Distribution</h3>
+                        <div class="chart-container-small"><canvas id="chart-types"></canvas></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SUBJECTS SCREEN -->
+            <section id="subjects" class="view">
+                <header class="top-header">
+                    <div class="flex-between">
+                        <h2>Subjects</h2>
+                        <button class="btn-primary btn-small" onclick="document.getElementById('modal-add-subject').classList.remove('hidden')">+ Add Subject</button>
+                    </div>
+                </header>
+                <div id="subjects-list" class="subjects-grid mt-4">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+            <!-- HISTORY SCREEN -->
+            <section id="history" class="view">
+                <header class="top-header">
+                    <h2>Study History</h2>
+                </header>
+                <div class="card mt-4 p-0">
+                    <div class="history-filters p-4 border-b">
+                        <input type="date" id="history-date-filter">
+                        <button class="btn-secondary btn-small" id="btn-clear-filter">Clear</button>
+                    </div>
+                    <div id="history-list" class="history-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- SETTINGS SCREEN -->
+            <section id="settings" class="view">
+                <header class="top-header">
+                    <h2>Settings</h2>
+                </header>
+                <div class="settings-container">
+                    <div class="card mb-4">
+                        <h3>Profile & Target</h3>
+                        <div class="form-group mt-2">
+                            <label>Name</label>
+                            <input type="text" id="setting-name">
+                        </div>
+                        <div class="form-group">
+                            <label>Daily Target (Hours)</label>
+                            <input type="number" id="setting-target" min="1" max="24">
+                        </div>
+                        <button id="btn-save-settings" class="btn-primary w-full">Save Changes</button>
+                    </div>
+
+                    <div class="card mb-4">
+                        <h3>Data Management</h3>
+                        <div class="flex-col gap-2 mt-2">
+                            <button id="btn-export" class="btn-secondary"><i data-lucide="download"></i> Export Data (JSON)</button>
+                            <button class="btn-secondary" onclick="document.getElementById('file-import').click()"><i data-lucide="upload"></i> Import Data</button>
+                            <input type="file" id="file-import" accept=".json" class="hidden">
+                            <button id="btn-clear-data" class="btn-danger mt-2"><i data-lucide="trash-2"></i> Clear All Data</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card text-center text-muted text-sm">
+                        <p>BCS Study Tracker v1.0</p>
+                        <p>All data is stored securely on your local device.</p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Mobile Bottom Nav -->
+        <nav class="bottom-nav mobile-only">
+            <button class="nav-item active" data-target="home">
+                <i data-lucide="layout-dashboard"></i><span>Home</span>
+            </button>
+            <button class="nav-item" data-target="study">
+                <i data-lucide="timer"></i><span>Study</span>
+            </button>
+            <button class="nav-item" data-target="analytics">
+                <i data-lucide="bar-chart-2"></i><span>Analytics</span>
+            </button>
+            <button class="nav-item" data-target="subjects">
+                <i data-lucide="library"></i><span>Subjects</span>
+            </button>
+            <button class="nav-item" data-target="history">
+                <i data-lucide="menu"></i><span>More</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- Modals -->
+    <!-- Add Plan Modal -->
+    <div id="modal-add-plan" class="modal hidden">
+        <div class="modal-content card">
+            <h3>Add to Today's Plan</h3>
+            <div class="form-group mt-2">
+                <label>Task Title</label>
+                <input type="text" id="plan-title" placeholder="E.g. Read Constitution Chapter 1">
+            </div>
+            <div class="form-group">
+                <label>Subject (Optional)</label>
+                <select id="plan-subject"></select>
+            </div>
+            <div class="form-group">
+                <label>Planned Duration (Minutes)</label>
+                <input type="number" id="plan-duration" value="60">
+            </div>
+            <div class="flex-end gap-2 mt-4">
+                <button class="btn-secondary" onclick="document.getElementById('modal-add-plan').classList.add('hidden')">Cancel</button>
+                <button class="btn-primary" id="btn-save-plan">Add Task</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Finish Session Modal -->
+    <div id="modal-finish-session" class="modal hidden">
+        <div class="modal-content card">
+            <h3>Save Study Session</h3>
+            <p id="finish-duration-text" class="text-huge text-primary text-center my-2">00:00:00</p>
+            <div class="form-group">
+                <label>Specific Topic (Optional)</label>
+                <input type="text" id="finish-topic" placeholder="What exactly did you study?">
+            </div>
+            <div class="form-group">
+                <label>Notes (Optional)</label>
+                <textarea id="finish-notes" rows="2" placeholder="Any important points?"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Confidence Level</label>
+                <input type="range" id="finish-confidence" min="1" max="5" value="3" class="w-full">
+                <div class="flex-between text-xs text-muted">
+                    <span>Low</span><span>Medium</span><span>High</span>
+                </div>
+            </div>
+            <div class="flex-end gap-2 mt-4">
+                <button class="btn-danger" id="btn-discard-session">Discard</button>
+                <button class="btn-primary" id="btn-save-session">Save Session</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Subject Modal -->
+    <div id="modal-add-subject" class="modal hidden">
+        <div class="modal-content card">
+            <h3>Add New Subject</h3>
+            <div class="form-group mt-2">
+                <label>Subject Name</label>
+                <input type="text" id="new-subject-name" placeholder="E.g. English Literature">
+            </div>
+            <div class="form-group">
+                <label>Monthly Target (Hours)</label>
+                <input type="number" id="new-subject-target" value="10">
+            </div>
+            <div class="flex-end gap-2 mt-4">
+                <button class="btn-secondary" onclick="document.getElementById('modal-add-subject').classList.add('hidden')">Cancel</button>
+                <button class="btn-primary" id="btn-save-subject">Save Subject</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden">Message</div>
+
+    <script src="app.js"></script>
+</body>
+                      </html>
