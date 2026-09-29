@@ -1,0 +1,21 @@
+{
+  "name": "BCS Study Tracker",
+  "short_name": "BCS Tracker",
+  "description": "Plan, Study, Track and Improve your BCS preparation.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
